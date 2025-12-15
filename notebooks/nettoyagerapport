@@ -1,3 +1,7 @@
 “Les données de consommation sont fournies à une granularité semi-horaire (48 pas de temps par jour). Une première vérification montre l’absence de valeurs manquantes et des ordres de grandeur cohérents. Un nettoyage structurel est néanmoins nécessaire, notamment sur le format temporel et certaines variables redondantes.”
 
 “La vérification de la continuité temporelle montre que les données de consommation sont complètes et régulièrement espacées, avec un pas de temps constant de 30 minutes sur l’ensemble de l’année.”
+
+Météo “Les données météorologiques sont fournies à une granularité horaire pour 32 villes. Un premier nettoyage a consisté à convertir la variable temporelle au format datetime et à homogénéiser le fuseau horaire afin de garantir la compatibilité avec les données de consommation.”
+
+“Les données météorologiques locales ont été nettoyées puis agrégées à l’échelle nationale par moyenne horaire des 32 villes, afin de construire des variables explicatives cohérentes avec la consommation électrique nationale.”
