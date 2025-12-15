@@ -5,3 +5,5 @@
 Météo “Les données météorologiques sont fournies à une granularité horaire pour 32 villes. Un premier nettoyage a consisté à convertir la variable temporelle au format datetime et à homogénéiser le fuseau horaire afin de garantir la compatibilité avec les données de consommation.”
 
 “Les données météorologiques locales ont été nettoyées puis agrégées à l’échelle nationale par moyenne horaire des 32 villes, afin de construire des variables explicatives cohérentes avec la consommation électrique nationale.”
+
+“Afin d’aligner les deux sources de données, la consommation électrique semi-horaire a été agrégée à une fréquence horaire par moyenne.”
