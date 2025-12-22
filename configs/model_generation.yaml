@@ -1,0 +1,32 @@
+# =====================================
+# Renewable generation forecasting
+# =====================================
+
+enabled: false
+
+targets:
+  - wind
+  - solar
+
+models:
+  wind:
+    type: xgboost
+    features:
+      - wind_speed_10m
+      - hour_of_day
+      - day_of_year
+    horizon: 24
+
+  solar:
+    type: xgboost
+    features:
+      - direct_radiation
+      - cloud_cover
+      - hour_of_day
+      - day_of_year
+    horizon: 24
+
+evaluation:
+  metrics:
+    - rmse
+    - mae
