@@ -1,0 +1,32 @@
+# =====================================
+# Feature engineering configuration
+# =====================================
+
+lags:
+  load:
+    - 24
+    - 48
+    - 168
+
+rolling_windows:
+  load:
+    - window: 24
+      statistic: mean
+    - window: 168
+      statistic: mean
+
+calendar_features:
+  hour_of_day: true
+  day_of_week: true
+  is_weekend: true
+  is_holiday: true
+
+cyclical_encoding:
+  hour_of_day: true
+  day_of_year: true
+
+weather_features:
+  use_temperature: true
+  use_wind: true
+  use_cloud_cover: true
+  use_radiation: false
