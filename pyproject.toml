@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "france-grid-stress-prediction"
+version = "0.1.0"
+description = "Day-ahead electricity load and renewable generation forecasting for grid stress analysis in France"
+requires-python = ">=3.10"
+
+dependencies = [
+  "pandas",
+  "numpy",
+  "scikit-learn",
+  "xgboost",
+  "requests",
+  "pyyaml"
+]

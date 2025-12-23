@@ -1,0 +1,26 @@
+# =====================================
+# Load forecasting model configuration
+# =====================================
+
+model:
+  type: xgboost
+  objective: reg:squarederror
+
+training:
+  horizon: 24
+  retrain_frequency: daily
+  validation: walk_forward
+
+hyperparameters:
+  n_estimators: 500
+  max_depth: 6
+  learning_rate: 0.05
+  subsample: 0.8
+  colsample_bytree: 0.8
+  random_state: 42
+
+evaluation:
+  metrics:
+    - rmse
+    - mae
+    - mape
