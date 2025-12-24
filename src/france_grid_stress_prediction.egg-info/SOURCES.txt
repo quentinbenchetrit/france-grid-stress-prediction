@@ -1,0 +1,12 @@
+README.md
+pyproject.toml
+src/france_grid_stress_prediction.egg-info/PKG-INFO
+src/france_grid_stress_prediction.egg-info/SOURCES.txt
+src/france_grid_stress_prediction.egg-info/dependency_links.txt
+src/france_grid_stress_prediction.egg-info/requires.txt
+src/france_grid_stress_prediction.egg-info/top_level.txt
+src/nettoyage/__init__.py
+src/nettoyage/data/consumption_cleaning.py
+src/nettoyage/data/merge_datasets.py
+src/nettoyage/data/prophet_fill.py
+src/nettoyage/data/weather_cleaning.py

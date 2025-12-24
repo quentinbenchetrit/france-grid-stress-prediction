@@ -1,0 +1,11 @@
+Metadata-Version: 2.4
+Name: france-grid-stress-prediction
+Version: 0.1.0
+Summary: Day-ahead electricity load and renewable generation forecasting for grid stress analysis in France
+Requires-Python: >=3.10
+Requires-Dist: pandas
+Requires-Dist: numpy
+Requires-Dist: scikit-learn
+Requires-Dist: xgboost
+Requires-Dist: requests
+Requires-Dist: pyyaml
