@@ -3,12 +3,15 @@
 Thumbs.db
 
 # Environnements virtuels
-venv/
+
 .env
+.venv/
+venv/
 
 # Fichiers Python compilés
 __pycache__/
 *.pyc
+.ipynb_checkpoints/
 
 # Fichiers de logs
 *.log
