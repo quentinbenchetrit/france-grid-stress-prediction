@@ -4,7 +4,7 @@ import pandas as pd
 from retry_requests import retry
 
 # --- CONFIGURATION ---
-TARGET_YEAR = 2010  # Changez ici (ex: 2023) pour récupérer une autre année complète
+TARGET_YEAR = 2002  # Changez ici (ex: 2023) pour récupérer une autre année complète
 START_DATE = f"{TARGET_YEAR}-01-01"
 END_DATE = f"{TARGET_YEAR}-12-31"
 OUTPUT_FILE = f"weather_32_cities_historical_{TARGET_YEAR}.csv"
