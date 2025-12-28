@@ -4,7 +4,7 @@ import pandas as pd
 from retry_requests import retry
 
 # --- CONFIGURATION ---
-TARGET_YEAR = 2014  # Remplacer par 2023 pour obtenir l'année précédente
+TARGET_YEAR = 2025  # Remplacer par 2023 pour obtenir l'année précédente
 OUTPUT_FILE = f"weather_32_cities_{TARGET_YEAR}.csv"
 
 # Liste EXACTE des 32 agglomérations fournie (Nom, Latitude, Longitude)
