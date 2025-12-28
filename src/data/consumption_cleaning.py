@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Iterable, List, Dict, Optional
+from typing import List, Dict, Tuple
 
 import pandas as pd
 
@@ -30,66 +30,65 @@ class ConsumptionCleanConfig:
 
 
 def clean_consumption_file(path: Path) -> pd.DataFrame:
-    """Load and clean one raw consumption CSV (Robust version)."""
-    
-    # 1. Lecture robuste (détection auto du séparateur : , ou ;)
-    try:
-        df = pd.read_csv(path, sep=None, engine='python')
-    except Exception:
-        # Si échec, on tente le point-virgule explicitement
-        df = pd.read_csv(path, sep=';')
+    """Load and clean one raw consumption CSV."""
+    df = pd.read_csv(path)
 
-    # 2. Standardisation des noms de colonnes (minuscules + strip)
+    # Normalize column names (trim + lower)
     df.columns = [c.strip().lower() for c in df.columns]
 
-    # 3. Dictionnaire de renommage (Français -> Format attendu)
-    # Adapte cette liste si tes colonnes s'appellent autrement (ex: "date_heure")
-    rename_map = {
-        "date": "datetime",
-        "date_heure": "datetime",
-        "horodatage": "datetime",
-        "consommation": "load_mw",
-        "puissance": "load_mw",
-        "valeur": "load_mw",
-        "value": "load_mw"
-    }
-    df = df.rename(columns=rename_map)
+    # Fix: handle duplicate column names (e.g. duplicated 'datetime')
+    if df.columns.duplicated().any():
+        dupes = df.columns[df.columns.duplicated()].tolist()
+        print(f"[WARN] {path.name}: duplicate columns -> {dupes}")
+        df = df.loc[:, ~df.columns.duplicated(keep="first")]
 
-    # 4. Vérification de la colonne datetime
     if "datetime" not in df.columns:
-        # Si on a "date" et "heure" séparés, on tente de les fusionner
-        if "date" in df.columns and "heure" in df.columns:
-            df["datetime"] = pd.to_datetime(df["date"] + " " + df["heure"])
-        else:
-            raise ValueError(f"Colonne 'datetime' introuvable dans {path.name}. Colonnes dispos: {list(df.columns)}")
+        raise ValueError(f"Missing 'datetime' in {path.name}. Columns: {list(df.columns)}")
 
-    # 5. Conversion et nettoyage
-    df["datetime"] = pd.to_datetime(df["datetime"], utc=True, errors="coerce")
-    df = df.dropna(subset=["datetime"]).sort_values("datetime")
-    
-    # Retrait timezone pour éviter les conflits
-    df["datetime"] = df["datetime"].dt.tz_convert(None)
+    # Parse datetime (naive; timezone handled upstream if needed)
+    df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+    df = df.dropna(subset=["datetime"]).copy()
+    df = df.sort_values("datetime")
 
-    # 6. Gestion de la colonne charge (load_mw)
+    # Drop non-essential columns if present
+    for col in ["statut", "slot_index"]:
+        if col in df.columns:
+            df = df.drop(columns=[col])
+
+    # Keep only numeric load column; attempt common names
+    load_candidates = [c for c in df.columns if c in {"load_mw", "consumption_mw", "conso_mw", "valeur"}]
     if "load_mw" not in df.columns:
-        # On cherche une colonne numérique restante
-        numeric_cols = [c for c in df.columns if c != "datetime" and pd.api.types.is_numeric_dtype(df[c])]
-        if numeric_cols:
-             df = df.rename(columns={numeric_cols[0]: "load_mw"})
+        if load_candidates:
+            df = df.rename(columns={load_candidates[0]: "load_mw"})
         else:
-            raise ValueError(f"Pas de colonne de consommation trouvée dans {path.name}")
+            # Fallback: first numeric column besides datetime
+            numeric_cols = [
+                c for c in df.columns
+                if c != "datetime" and pd.api.types.is_numeric_dtype(df[c])
+            ]
+            if not numeric_cols:
+                raise ValueError(f"No numeric load column found in {path.name}. Columns: {list(df.columns)}")
+            df = df.rename(columns={numeric_cols[0]: "load_mw"})
 
-    # On ne garde que l'essentiel
+    # Keep final schema
     df = df[["datetime", "load_mw"]].copy()
-    
-    # Dédoublonnage (garde la première occurrence)
+
+    # Deduplicate timestamps (keep first)
     df = df.drop_duplicates(subset=["datetime"], keep="first")
 
     return df
 
 
-def build_consumption_dataset(cfg: ConsumptionCleanConfig) -> pd.DataFrame:
-    """Clean all matching raw files and export consolidated Parquet."""
+def build_consumption_dataset(cfg: ConsumptionCleanConfig) -> Tuple[pd.DataFrame, pd.DataFrame]:
+    """Clean all matching raw files and export consolidated Parquet.
+
+    Returns
+    -------
+    df_all : pd.DataFrame
+        Consolidated dataset with columns ["datetime", "load_mw"].
+    report : pd.DataFrame
+        Per-file summary (rows, min/max datetime, continuity issues).
+    """
     files = sorted(cfg.raw_dir.glob(cfg.pattern))
     if not files:
         raise FileNotFoundError(f"No files matching {cfg.pattern} in {cfg.raw_dir}")
@@ -100,7 +99,7 @@ def build_consumption_dataset(cfg: ConsumptionCleanConfig) -> pd.DataFrame:
     for p in files:
         df = clean_consumption_file(p)
 
-        # simple continuity check at 30-min resolution
+        # Simple continuity check at 30-min resolution
         delta = df["datetime"].diff()
         n_bad_steps = int((delta.notna() & (delta != EXPECTED_FREQ)).sum())
 
@@ -121,4 +120,5 @@ def build_consumption_dataset(cfg: ConsumptionCleanConfig) -> pd.DataFrame:
     cfg.out_path.parent.mkdir(parents=True, exist_ok=True)
     df_all.to_parquet(cfg.out_path, index=False)
 
-    return df_all, pd.DataFrame(reports).sort_values("file")
+    report_df = pd.DataFrame(reports).sort_values("file").reset_index(drop=True)
+    return df_all, report_df
