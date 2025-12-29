@@ -102,3 +102,17 @@ france-grid-stress-prediction/
 ├── pyproject.toml         Project metadata and build system dependencies
 ├── requirements.txt       Project dependencies
 └── requirements-api.txt   Dependencies specific to the API service
+
+
+# ⚡ France Grid Stress Prediction (API)
+
+Ce projet propose une API basée sur **FastAPI** permettant de prédire la consommation électrique et le stress sur le réseau français. Il utilise un modèle de Machine Learning entraîné (XGBoost) pour effectuer des prévisions en temps réel.
+
+## 🛠️ Installation
+
+Avant de lancer l'API, assurez-vous d'avoir installé les dépendances nécessaires.
+
+1. **Ouvrir un terminal** à la racine du projet.
+2. **Exécuter la commande suivante :**
+   ```bash
+   pip install -r requirements.txt
