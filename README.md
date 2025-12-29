@@ -106,14 +106,20 @@ france-grid-stress-prediction/
 
 # ⚡ France Grid Stress Prediction (API)
 
-Ce projet propose une API basée sur **FastAPI** permettant de prédire la consommation électrique et le stress sur le réseau français. Il utilise un modèle de Machine Learning entraîné (XGBoost) pour effectuer des prévisions en temps réel.
+This project provides a **FastAPI** interface to predict French electrical consumption and grid stress. It uses a trained Machine Learning model (XGBoost) to perform real-time forecasts.
 
-## 🛠️ Installation
+## 🛠️ Installation & Setup
 
-Avant de lancer l'API, assurez-vous d'avoir installé les dépendances nécessaires.
+Before starting the API, make sure you are in the project root directory.
 
-1. **Ouvrir un terminal** à la racine du projet.
-2. **Exécuter la commande suivante :**
-   ```bash  uvicorn api.app:app --host 0.0.0.0 --port 8000
-3. Ensuite accéder https://user-rias-855599-0.user.lab.sspcloud.fr/proxy/8000/docs 
-4. Dans /predict/realtime try it out
+1. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   
+
+2. **Load the session:**
+    uvicorn api.app:app --host 0.0.0.0 --port 8000
+
+3. **Prediction:**
+    Go to https://user-rias-855599-0.user.lab.sspcloud.fr/proxy/8000/docs through the terminal and click try it out in /predict/realtime
+
