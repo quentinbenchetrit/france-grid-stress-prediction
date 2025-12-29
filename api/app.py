@@ -1,5 +1,5 @@
 from __future__ import annotations
-
+from datetime import datetime
 import json
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -135,10 +135,41 @@ def predict(req: PredictRequest):
     )
 
 
-# On masque /predict/realtime (Solution 1)
-@app.get("/predict/realtime", include_in_schema=False)
-def predict_realtime_disabled():
-    raise HTTPException(
-        status_code=400,
-        detail="Disabled: this model requires a full feature vector (lags/rolling). Use POST /predict.",
-    )
+# Ajoute l'import en haut de app.py
+from .feature_builder import build_live_features
+
+# ... (le reste du code) ...
+
+# Remplace l'ancien endpoint realtime par celui-ci :
+@app.get("/predict/realtime", response_model=PredictResponse)
+def predict_realtime():
+    """
+    Prédiction en direct :
+    1. Récupère la météo live (Open-Meteo)
+    2. Récupère l'historique conso (RTE API)
+    3. Calcule toutes les features et prédit.
+    """
+    try:
+        # 1. Construction automatique des features
+        X = build_live_features()
+        
+        # 2. Vérification de l'ordre des colonnes (Sécurité)
+        # On s'assure que X a bien les colonnes dans l'ordre de FEATURES
+        # (FEATURES vient de ton metadata.json chargé plus haut)
+        X = X[FEATURES] 
+        
+        # 3. Prédiction
+        yhat = float(bundle.model.predict(X)[0])
+        
+        return PredictResponse(
+            timestamp=datetime.now().isoformat(),
+            prediction=yhat,
+            target=TARGET,
+            missing_features=[],
+            extra_features=[],
+            model="xgboost-realtime"
+        )
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Realtime prediction failed: {str(e)}")
+

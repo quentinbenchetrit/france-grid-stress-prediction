@@ -1,31 +1,89 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from datetime import datetime, timezone
+import numpy as np
 import pandas as pd
+from datetime import datetime, timezone
 
-@dataclass
-class WeatherInput:
-    timestamp: datetime
-    temp_c: float
-    wind_speed_ms: float
-    humidity: float | None = None
-    pressure_hpa: float | None = None
+# On importe tes deux nouveaux providers
+# Assure-toi que les fichiers rte_provider.py et weather_provider.py sont dans le même dossier
+from .rte_provider import update_history_data, get_consumption_features
+from .weather_provider import get_live_weather_features
 
-def build_features(w: WeatherInput) -> pd.DataFrame:
-    # Exemples de features (à aligner avec ton training !)
-    ts = w.timestamp
-    if ts.tzinfo is None:
-        ts = ts.replace(tzinfo=timezone.utc)
+def build_live_features() -> pd.DataFrame:
+    """
+    Construit le vecteur de features complet pour l'instant T (maintenant).
+    Orchestre la récupération Météo + RTE + Calculs mathématiques.
+    """
+    
+    # 1. Mise à jour des données RTE (télécharge les dernières 24h si besoin)
+    # C'est ce qui permet d'avoir les lags à jour.
+    try:
+        update_history_data()
+    except Exception as e:
+        print(f"⚠️ Warning: Impossible de mettre à jour RTE ({e}). On utilise le cache existant.")
 
+    # 2. Récupération des inputs bruts
+    # a) Features de consommation (Lags & Rolling)
+    cons_features = get_consumption_features()
+    
+    # b) Features météo (Moyenne nationale)
+    weather_features = get_live_weather_features()
+    
+    # 3. Gestion du Temps (Date actuelle UTC)
+    # On utilise l'heure de la météo pour être cohérent, ou 'now'
+    ts = weather_features.get("timestamp_weather")
+    if ts is None:
+        ts = datetime.now(timezone.utc)
+    
+    # Extraction des composants temporels
+    hour = ts.hour
+    dayofweek = ts.weekday()  # 0=Lundi, 6=Dimanche
+    month = ts.month
+    dayofyear = ts.timetuple().tm_yday
+    
+    # 4. Calculs des features cycliques (Maths)
+    # C'est crucial pour que le modèle comprenne que 23h est proche de 00h
+    hour_sin = np.sin(2 * np.pi * hour / 24.0)
+    hour_cos = np.cos(2 * np.pi * hour / 24.0)
+    
+    doy_sin = np.sin(2 * np.pi * dayofyear / 366.0)
+    doy_cos = np.cos(2 * np.pi * dayofyear / 366.0)
+
+    # 5. Assemblage du dictionnaire final
+    # ATTENTION : Les clés doivent correspondre aux noms attendus par ton metadata.json
     row = {
-        "temp_c": w.temp_c,
-        "wind_speed_ms": w.wind_speed_ms,
-        "humidity": w.humidity if w.humidity is not None else 0.0,
-        "pressure_hpa": w.pressure_hpa if w.pressure_hpa is not None else 0.0,
-        "hour": ts.hour,
-        "dayofweek": ts.weekday(),  # 0=lundi
-        "month": ts.month,
-        "is_weekend": 1 if ts.weekday() >= 5 else 0,
+        # --- Météo ---
+        "temperature_2m": weather_features["temperature_2m"],
+        "wind_speed_10m": weather_features["wind_speed_10m"],
+        "direct_radiation": weather_features["direct_radiation"],
+        "diffuse_radiation": weather_features["diffuse_radiation"],
+        "cloud_cover": weather_features["cloud_cover"],
+
+        # --- Temps ---
+        "hour": hour,
+        "dayofweek": dayofweek,
+        "is_weekend": 1 if dayofweek >= 5 else 0,
+        "month": month,
+        "dayofyear": dayofyear,
+
+        # --- Cyclique ---
+        "hour_sin": hour_sin,
+        "hour_cos": hour_cos,
+        "doy_sin": doy_sin,
+        "doy_cos": doy_cos,
+
+        # --- Historique Charge (RTE) ---
+        "load_lag_1h": cons_features["load_lag_1h"],
+        "load_lag_24h": cons_features["load_lag_24h"],
+        "load_lag_48h": cons_features["load_lag_48h"],
+        "load_lag_168h": cons_features["load_lag_168h"],
+
+        "load_roll_mean_24h": cons_features["load_roll_mean_24h"],
+        "load_roll_std_24h": cons_features["load_roll_std_24h"],
+        "load_roll_mean_168h": cons_features["load_roll_mean_168h"],
+        "load_roll_std_168h": cons_features["load_roll_std_168h"],
     }
 
-    return pd.DataFrame([row])
+    # Création du DataFrame (1 seule ligne)
+    df = pd.DataFrame([row])
+    
+    return df
