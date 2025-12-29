@@ -115,4 +115,5 @@ Avant de lancer l'API, assurez-vous d'avoir installé les dépendances nécessai
 1. **Ouvrir un terminal** à la racine du projet.
 2. **Exécuter la commande suivante :**
    ```bash  uvicorn api.app:app --host 0.0.0.0 --port 8000
-3. Ensuite accéder 
+3. Ensuite accéder https://user-rias-855599-0.user.lab.sspcloud.fr/proxy/8000/docs 
+4. Dans /predict/realtime try it out
