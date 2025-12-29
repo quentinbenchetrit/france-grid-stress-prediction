@@ -45,7 +45,7 @@ def clean_consumption_file(path: Path) -> pd.DataFrame:
     if "datetime" not in df.columns:
         raise ValueError(f"Missing 'datetime' in {path.name}. Columns: {list(df.columns)}")
 
-    # Parse datetime (naive; timezone handled upstream if needed)
+    #  datetime 
     df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
     df = df.dropna(subset=["datetime"]).copy()
     df = df.sort_values("datetime")
@@ -73,7 +73,7 @@ def clean_consumption_file(path: Path) -> pd.DataFrame:
     # Keep final schema
     df = df[["datetime", "load_mw"]].copy()
 
-    # Deduplicate timestamps (keep first)
+    # Deduplicate timestamps 
     df = df.drop_duplicates(subset=["datetime"], keep="first")
 
     return df

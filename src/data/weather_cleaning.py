@@ -23,7 +23,7 @@ EXPECTED_FREQ = pd.Timedelta("1H")
 class WeatherCleanConfig:
     raw_dir: Path
     out_path: Path
-    pattern: str = "weather_32_cities*.csv"  # picks historical_2010..2014 + 2015..2024 by default
+    pattern: str = "weather_32_cities*.csv"  
 
 
 def _normalize_datetime(df: pd.DataFrame) -> pd.DataFrame:
