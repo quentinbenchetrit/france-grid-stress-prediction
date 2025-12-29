@@ -73,7 +73,7 @@ france-grid-stress-prediction/
 │  ├─ interim/     Intermediate datasets
 │  └─ processed/   Final datasets used for modeling
 ├─ notebooks/      Exploratory analysis and prototyping
-├─ src/fgsp/       Python package containing core logic
+├─ src/data/       Python package containing core logic
 ├─ scripts/        Reproducible command-line scripts
 ├─ models/         Trained model artifacts
 ├─ reports/        Figures and tables
