@@ -66,15 +66,39 @@ The repository follows a professional data science structure inspired by industr
 
 ```text
 france-grid-stress-prediction/
-├─ configs/        Configuration files (data sources, features, model parameters)
-├─ data/
-│  ├─ external/    Reference files (agglomerations, weights)
-│  ├─ raw/         Raw data (not versioned)
-│  ├─ interim/     Intermediate datasets
-│  └─ processed/   Final datasets used for modeling
-├─ notebooks/      Exploratory analysis and prototyping
-├─ src/data/       Python package containing core logic
-├─ scripts/        Reproducible command-line scripts
-├─ models/         Trained model artifacts
-├─ reports/        Figures and tables
-└─ tests/          Basic tests (time alignment, leakage checks)
+│
+├── api/                    Backend application logic
+│   ├── app.py              Main entry point for the API
+│   ├── feature_builder.py  Logic for constructing model features
+│   ├── model.py            Model inference logic
+│   ├── rte_provider.py     Data provider for RTE (grid) data
+│   └── weather_provider.py Data provider for weather services
+│
+├── configs/                  Configuration files
+│   ├── data.yaml             Data source configurations
+│   ├── features.yaml         Feature engineering definitions
+│   ├── model_generation.yaml Training parameters
+│   └── model_load.yaml       Inference parameters
+│
+├── data/                  Data storage
+│   ├── external/          Reference files (agglomerations/weights)
+│   ├── interim/           Intermediate data and backtest CSVs
+│   ├── processed/         Final .parquet datasets (cleaned & feature-rich)
+│   └── raw/               Raw immutable data (consumption, production, weather)
+│
+├── models/                Serialized/Trained model artifacts
+│
+├── notebooks/             Jupyter notebooks for exploration and prototyping
+│
+├── outputs/               Generated outputs (figures, tables, logs)
+│
+├── scripts/               Standalone utility scripts
+│
+├── src/                   Core Python source package
+│
+├── .env.example           Template for environment variables
+├── Dockerfile             Container configuration
+├── Makefile               Command shortcuts (build, test, run)
+├── pyproject.toml         Project metadata and build system dependencies
+├── requirements.txt       Project dependencies
+└── requirements-api.txt   Dependencies specific to the API service
