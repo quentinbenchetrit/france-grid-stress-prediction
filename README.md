@@ -114,5 +114,5 @@ Avant de lancer l'API, assurez-vous d'avoir installé les dépendances nécessai
 
 1. **Ouvrir un terminal** à la racine du projet.
 2. **Exécuter la commande suivante :**
-   ```bash
-   pip install -r requirements.txt
+   ```bash  uvicorn api.app:app --host 0.0.0.0 --port 8000
+3. Ensuite accéder 
