@@ -4,7 +4,7 @@ import pandas as pd
 from datetime import datetime, timezone
 
 # On importe tes deux nouveaux providers
-# Assure-toi que les fichiers rte_provider.py et weather_provider.py sont dans le même dossier
+
 from .rte_provider import update_history_data, get_consumption_features
 from .weather_provider import get_live_weather_features
 
@@ -15,7 +15,7 @@ def build_live_features() -> pd.DataFrame:
     """
     
     # 1. Mise à jour des données RTE (télécharge les dernières 24h si besoin)
-    # C'est ce qui permet d'avoir les lags à jour.
+   
     try:
         update_history_data()
     except Exception as e:
@@ -49,7 +49,7 @@ def build_live_features() -> pd.DataFrame:
     doy_cos = np.cos(2 * np.pi * dayofyear / 366.0)
 
     # 5. Assemblage du dictionnaire final
-    # ATTENTION : Les clés doivent correspondre aux noms attendus par ton metadata.json
+  
     row = {
         # --- Météo ---
         "temperature_2m": weather_features["temperature_2m"],

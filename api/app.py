@@ -88,7 +88,7 @@ def root():
 
 @app.get("/model/info")
 def model_info():
-    # pratique pour vérifier FEATURES côté Swagger
+    
     return {
         "target": TARGET,
         "n_features": len(FEATURES),
@@ -105,7 +105,7 @@ def predict(req: PredictRequest):
     extra = [c for c in provided.keys() if c not in FEATURES]
 
     if missing:
-        # On refuse proprement si features manquantes
+        
         raise HTTPException(
             status_code=422,
             detail={
@@ -138,9 +138,9 @@ def predict(req: PredictRequest):
 # Ajoute l'import en haut de app.py
 from .feature_builder import build_live_features
 
-# ... (le reste du code) ...
 
-# Remplace l'ancien endpoint realtime par celui-ci :
+
+
 @app.get("/predict/realtime", response_model=PredictResponse)
 def predict_realtime():
     """
