@@ -1,0 +1,144 @@
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from typing import Any, Dict, List, Optional
+
+import pandas as pd
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
+
+from .model import load_model
+
+# --- Paths (projet) ---
+APP_DIR = Path(__file__).resolve().parent
+PROJECT_DIR = APP_DIR.parent
+MODEL_PATH = PROJECT_DIR / "models" / "xgb_model.joblib"
+METADATA_PATH = PROJECT_DIR / "models" / "metadata.json"
+
+# --- FastAPI app ---
+# root_path nécessaire derrière /proxy/8000
+app = FastAPI(
+    title="Grid Stress Prediction API",
+    version="1.0.0",
+    root_path="/proxy/8000",
+)
+
+# --- Load model ---
+bundle = load_model(MODEL_PATH)
+
+# --- Load metadata (features) ---
+if not METADATA_PATH.exists():
+    raise FileNotFoundError(
+        f"metadata.json introuvable: {METADATA_PATH}\n"
+        "Crée-le dans models/ avec au minimum la clé 'features' (liste des colonnes du training)."
+    )
+
+with open(METADATA_PATH, "r", encoding="utf-8") as f:
+    METADATA = json.load(f)
+
+if "features" not in METADATA or not isinstance(METADATA["features"], list) or len(METADATA["features"]) == 0:
+    raise ValueError(
+        "metadata.json doit contenir une clé 'features' non vide, ex:\n"
+        '{ "features": ["temperature_2m", "..."], "target": "..." }'
+    )
+
+FEATURES: List[str] = METADATA["features"]
+TARGET: Optional[str] = METADATA.get("target")
+
+
+# --- Schemas ---
+class PredictRequest(BaseModel):
+    timestamp: Optional[str] = Field(
+        default=None,
+        description="Optionnel. Timestamp ISO (ex: 2024-01-15T12:00:00Z).",
+    )
+    features: Dict[str, Any] = Field(
+        ...,
+        description="Dictionnaire: nom_feature -> valeur. Doit contenir TOUTES les features attendues par le modèle.",
+    )
+
+
+class PredictResponse(BaseModel):
+    timestamp: Optional[str]
+    prediction: float
+    model: str = "xgboost"
+    target: Optional[str] = None
+    missing_features: List[str] = []
+    extra_features: List[str] = []
+
+
+# --- Routes ---
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/")
+def root():
+    return {
+        "message": "API running",
+        "docs": "/docs",
+        "health": "/health",
+        "predict": "/predict",
+        "target": TARGET,
+        "n_features": len(FEATURES),
+    }
+
+
+@app.get("/model/info")
+def model_info():
+    # pratique pour vérifier FEATURES côté Swagger
+    return {
+        "target": TARGET,
+        "n_features": len(FEATURES),
+        "features": FEATURES,
+        **{k: v for k, v in METADATA.items() if k not in ["features"]},
+    }
+
+
+@app.post("/predict", response_model=PredictResponse)
+def predict(req: PredictRequest):
+    provided = req.features
+
+    missing = [c for c in FEATURES if c not in provided]
+    extra = [c for c in provided.keys() if c not in FEATURES]
+
+    if missing:
+        # On refuse proprement si features manquantes
+        raise HTTPException(
+            status_code=422,
+            detail={
+                "error": "Missing required features for this model",
+                "missing_features": missing,
+                "extra_features": extra,
+                "expected_feature_count": len(FEATURES),
+                "provided_feature_count": len(provided),
+            },
+        )
+
+    # DataFrame dans l'ordre exact du training
+    X = pd.DataFrame([{c: provided[c] for c in FEATURES}], columns=FEATURES)
+
+
+    try:
+        yhat = float(bundle.model.predict(X)[0])
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Prediction failed: {e}")
+
+    return PredictResponse(
+        timestamp=req.timestamp,
+        prediction=yhat,
+        target=TARGET,
+        missing_features=[],
+        extra_features=extra,
+    )
+
+
+# On masque /predict/realtime (Solution 1)
+@app.get("/predict/realtime", include_in_schema=False)
+def predict_realtime_disabled():
+    raise HTTPException(
+        status_code=400,
+        detail="Disabled: this model requires a full feature vector (lags/rolling). Use POST /predict.",
+    )

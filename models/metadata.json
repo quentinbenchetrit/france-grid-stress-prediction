@@ -1,0 +1,36 @@
+{
+  "model_name": "xgboost_grid_stress",
+  "model_type": "XGBoostRegressor",
+  "target": "electric_load",
+
+  "features": [
+    "temperature_2m",
+    "wind_speed_10m",
+    "direct_radiation",
+    "diffuse_radiation",
+    "cloud_cover",
+
+    "hour",
+    "dayofweek",
+    "is_weekend",
+    "month",
+    "dayofyear",
+
+    "hour_sin",
+    "hour_cos",
+    "doy_sin",
+    "doy_cos",
+
+    "load_lag_1h",
+    "load_lag_24h",
+    "load_lag_48h",
+    "load_lag_168h",
+
+    "load_roll_mean_24h",
+    "load_roll_std_24h",
+    "load_roll_mean_168h",
+    "load_roll_std_168h"
+  ],
+
+  "notes": "Features list extracted from model.feature_names_in_. Order and names must be strictly preserved."
+}
