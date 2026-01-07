@@ -25,3 +25,4 @@ ipykernel>=6.0
 # missing packages
 uvicorn[standard]
 fastapi
+statsmodels
