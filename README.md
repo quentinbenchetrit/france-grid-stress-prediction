@@ -121,5 +121,5 @@ Before starting the API, make sure you are in the project root directory.
     uvicorn api.app:app --host 0.0.0.0 --port 8000
 
 3. **Prediction:**
-    Go to https://user-rias-855599-0.user.lab.sspcloud.fr/proxy/8000/docs through the terminal and click try it out in /predict/realtime
+    Go to http://127.0.0.1:8000/docs through the terminal and click try it out in /predict/realtime
 
